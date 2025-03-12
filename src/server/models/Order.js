@@ -1,44 +1,63 @@
 
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const orderSchema = new mongoose.Schema({
-  customerId: {
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
   },
-  distributorId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  workerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  quantity: {
+  products: [
+    {
+      product: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product',
+        required: true,
+      },
+      quantity: {
+        type: Number,
+        required: true,
+        min: 1,
+      },
+      price: {
+        type: Number,
+        required: true,
+      },
+    },
+  ],
+  totalAmount: {
     type: Number,
     required: true,
-    min: 1
+    min: 0,
   },
   status: {
     type: String,
-    enum: ['pending', 'confirmed', 'in-transit', 'delivered', 'cancelled'],
-    default: 'pending'
+    enum: ['pending', 'processing', 'delivered', 'cancelled'],
+    default: 'pending',
+  },
+  deliveryAddress: {
+    type: String,
+    required: true,
+  },
+  paymentMethod: {
+    type: String,
+    required: true,
+    enum: ['cash', 'card', 'online'],
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'completed', 'failed'],
+    default: 'pending',
+  },
+  deliveryDate: {
+    type: Date,
   },
   createdAt: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
-  scheduledDelivery: {
-    type: Date,
-    required: true
-  },
-  deliveredAt: {
-    type: Date
-  }
 });
 
 const Order = mongoose.model('Order', orderSchema);
 
-module.exports = Order;
+export default Order;

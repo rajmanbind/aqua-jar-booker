@@ -1,7 +1,6 @@
 
-const express = require('express');
-const { body, validationResult } = require('express-validator');
-const User = require('../models/User');
+import express from 'express';
+import User from '../models/User.js';
 
 const router = express.Router();
 
@@ -14,67 +13,50 @@ router.get('/me', async (req, res) => {
     }
     res.json(user);
   } catch (error) {
-    console.error(error);
+    console.error('Error fetching user:', error.message);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Update user profile
-router.put(
-  '/me',
-  [
-    body('name').optional().notEmpty().withMessage('Name cannot be empty'),
-    body('phone').optional(),
-    body('address').optional()
-  ],
-  async (req, res) => {
-    // Validate request
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+router.put('/me', async (req, res) => {
+  const { name, email, phone, address } = req.body;
+  const updateFields = {};
+  
+  if (name) updateFields.name = name;
+  if (email) updateFields.email = email;
+  if (phone) updateFields.phone = phone;
+  if (address) updateFields.address = address;
 
-    try {
-      // Build update object
-      const updateFields = {};
-      if (req.body.name) updateFields.name = req.body.name;
-      if (req.body.phone) updateFields.phone = req.body.phone;
-      if (req.body.address) updateFields.address = req.body.address;
-      updateFields.updatedAt = Date.now();
-
-      // Find and update user
-      const user = await User.findByIdAndUpdate(
-        req.user.id,
-        { $set: updateFields },
-        { new: true }
-      ).select('-password');
-
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-
-      res.json(user);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Server error' });
-    }
-  }
-);
-
-// Get all workers (for distributors only)
-router.get('/workers', async (req, res) => {
   try {
-    // Check if user is a distributor
-    if (req.user.role !== 'distributor') {
-      return res.status(403).json({ message: 'Unauthorized' });
-    }
-
-    const workers = await User.find({ role: 'worker' }).select('-password');
-    res.json(workers);
+    let user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: updateFields },
+      { new: true }
+    ).select('-password');
+    
+    res.json(user);
   } catch (error) {
-    console.error(error);
+    console.error('Error updating user:', error.message);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-module.exports = router;
+// Admin routes (restricted to distributor role)
+// Get all users
+router.get('/', async (req, res) => {
+  try {
+    // Check if user is a distributor
+    if (req.user.role !== 'distributor') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    
+    const users = await User.find().select('-password');
+    res.json(users);
+  } catch (error) {
+    console.error('Error fetching users:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+export default router;

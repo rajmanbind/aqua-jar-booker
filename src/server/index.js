@@ -1,17 +1,18 @@
 
 // Server entry point
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const morgan = require('morgan');
-const dotenv = require('dotenv');
-const jwt = require('jsonwebtoken');
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import morgan from 'morgan';
+import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 
-// Import routes
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/users');
-const productRoutes = require('./routes/products');
-const orderRoutes = require('./routes/orders');
+// Note: We need to update imports for routes, but first let's fix the main server file
+// We'll create these route files after updating this main file
+import authRoutes from './routes/auth.js';
+import userRoutes from './routes/users.js';
+import productRoutes from './routes/products.js';
+import orderRoutes from './routes/orders.js';
 
 // Load environment variables
 dotenv.config();
