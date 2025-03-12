@@ -40,12 +40,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// API base URL - change this to your actual API URL
+const API_URL = 'http://localhost:3000/api';
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate checking for saved user session
+    // Check for saved user session
     const savedUser = localStorage.getItem('aqua_user');
     if (savedUser) {
       setUser(JSON.parse(savedUser));
@@ -55,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<User> => {
     setLoading(true);
-    // Simulate API call with delay
+    // For now, still using mock login
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         const foundUser = mockUsers.find(u => u.email === email);
@@ -79,19 +82,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (userData: Omit<User, 'id'>): Promise<User> => {
     setLoading(true);
-    // Simulate API call with delay
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const newUser = {
-          ...userData,
-          id: `user_${Date.now()}`
-        };
-        setUser(newUser);
-        localStorage.setItem('aqua_user', JSON.stringify(newUser));
-        setLoading(false);
-        resolve(newUser);
-      }, 800);
-    });
+    try {
+      // Make API call to register endpoint
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Registration failed');
+      }
+      
+      const data = await response.json();
+      
+      // Save the user data and token
+      const newUser = data.user;
+      setUser(newUser);
+      localStorage.setItem('aqua_user', JSON.stringify(newUser));
+      
+      // If you have a token in the response
+      if (data.token) {
+        localStorage.setItem('aqua_token', data.token);
+      }
+      
+      setLoading(false);
+      return newUser;
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
   };
 
   return (
