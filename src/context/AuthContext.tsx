@@ -100,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await response.json();
       
       // Save the user data and token
-      const newUser = data.user;
+      const newUser: User = data.user;
       setUser(newUser);
       localStorage.setItem('aqua_user', JSON.stringify(newUser));
       
